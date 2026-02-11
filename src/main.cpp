@@ -47,6 +47,7 @@ motor Shooter = motor(PORT2, ratio6_1, false);
 digital_out Loader = digital_out(Brain.ThreeWirePort.H);
 inertial Gyro = inertial(PORT6);
 gps GPS = gps(PORT7, 88.9, -177.8, mm, 180);
+optical colorSensor = optical(PORT1);
 
 // 前吸和后吸电机
 
@@ -57,9 +58,9 @@ double desired_x = 317;         // 目标x坐标（中心位置）
 double x_tolerance = 50;        // x方向允许误差范围（像素）
 double min_y = 80;             // 最小y坐标（过近阈值）
 double max_y = 400;             // 最大y坐标（过远阈值）
-double forward_speed = 100;     // 前进速度（rpm）
+double forward_speed = 200;     // 前进速度（rpm）
 double turn_speed = 10;         // 转向速度（rpm）
-double Intake_speed = 400;      // 3号电机转速（rpm）
+double Intake_speed = 500;      // 3号电机转速（rpm）
 double DownRoller_speed = 400;      // 5号电机转速（rpm）
 bool tracking_complete = false; // 跟踪完成标志
 
@@ -222,6 +223,8 @@ void handleCommand(const std::string &cmd)
     {
       // y值过大（目标非常接近），减速向前直行1.5秒，然后立即停止并结束跟踪阶段
       Drivetrain.drive(forward, forward_speed/2.0, rpm);
+
+      //Blocks any updates in the thread for 1.5 seconds.
       wait(1500, msec);
       Drivetrain.stop();
       Intake.stop();
@@ -355,8 +358,8 @@ void RedLeftShoot()
     GPS_YMove(420);//对齐左侧long goal
     GPS_TurnToHeading(316);//前吸后打机型对准左侧long goal（前吸前打机型应改为90度）
 
-    LMove.spin(fwd,-50,pct);
-    RMove.spin(fwd,-50,pct);
+    LMove.spin(fwd,-25,pct);
+    RMove.spin(fwd,-25,pct);
     wait(1,sec);//顶框，需要机器具备long goal限位结构
     Intake.spin(fwd,100,pct);
     //DownRoller.spin(fwd,100,pct);
@@ -417,6 +420,28 @@ int main() {
   wait(2, sec);
 
   // 第二阶段：执行GPS定位程序
+
+
+  // REMOVE 427-443 if Problematic
+  //Starts intake and only stops when color sensor sees blue (hopefully any red is spit out.)
+  colorSensor.setLightPower(100);   // 0–100 percent
+  colorSensor.setLight(ledState::on);
+  while(true)
+  { 
+    
+    if(colorSensor.hue() >= 190 && colorSensor.hue() <= 230)
+    {
+      Intake.stop();
+      break;
+    }
+    else
+    {
+      Intake.spin(fwd,15,pct);
+    }
+    wait(20,msec);
+  }
+  colorSensor.setLight(ledState::off);
+
   Brain.Screen.clearLine(4);
   Brain.Screen.print("Starting GPS program...");
   RedLeftShoot();

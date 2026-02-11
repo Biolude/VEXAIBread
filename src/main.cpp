@@ -20,6 +20,7 @@
 #include <sstream>
 #include <cstdlib>  // atof
 #include <cmath>
+#include <iostream>
 
 using namespace vex;
 using signature = vision::signature;
@@ -331,13 +332,29 @@ void GPS_YMove(int Ydis)//GPS以场地Y轴运动(度数0/180),变量为目标Y�
 
 void RedLeftShoot()
 {
-    GPS_TurnToHeading(90);
   /*
+    while(true)
+  {
+    Brain.Screen.clearScreen();
+    Brain.Screen.setCursor(1,1);
+    Brain.Screen.print("Heading: %.2f", GPS.heading(deg));
+    Brain.Screen.setCursor(2,1);
+    Brain.Screen.print("Rotation: %.2f", GPS.rotation(deg));
+    Brain.Screen.setCursor(3,1);
+    Brain.Screen.print("X: %.2f mm", GPS.xPosition(mm));
+    Brain.Screen.setCursor(4,1);
+    Brain.Screen.print("Y: %.2f mm", GPS.yPosition(mm));
+
+    wait(1, sec);
+  }
+    */
+    
     GPS_TurnToHeading(90);//GPS传感器对准红站位
-    GPS_XMove(-1200);//后退到红方区域
+    GPS_XMove(-340);//后退到红方区域
     GPS_TurnToHeading(180);//转向红左
-    GPS_YMove(1300);//对齐左侧long goal
-    GPS_TurnToHeading(270);//前吸后打机型对准左侧long goal（前吸前打机型应改为90度）
+    GPS_YMove(420);//对齐左侧long goal
+    GPS_TurnToHeading(316);//前吸后打机型对准左侧long goal（前吸前打机型应改为90度）
+
     LMove.spin(fwd,-50,pct);
     RMove.spin(fwd,-50,pct);
     wait(1,sec);//顶框，需要机器具备long goal限位结构
@@ -354,7 +371,8 @@ void RedLeftShoot()
     //Shooter.stop(coast);
     LMove.stop(brake);
     RMove.stop(brake);
-    */
+    
+    
 }
 
 /*---------------------------------------------------------------------------*/
@@ -363,20 +381,9 @@ void RedLeftShoot()
 
 int main() {
   pre_autonomous(); 
-  while(true)
-  {
-    Brain.Screen.clearScreen();
-    Brain.Screen.setCursor(1,1);
-    Brain.Screen.print("Heading: %.2f", GPS.heading(deg));
-    Brain.Screen.setCursor(2,1);
-    Brain.Screen.print("Rotation: %.2f", GPS.rotation(deg));
-    Brain.Screen.setCursor(3,1);
-    Brain.Screen.print("X: %.2f mm", GPS.xPosition(mm));
-    Brain.Screen.setCursor(4,1);
-    Brain.Screen.print("Y: %.2f mm", GPS.yPosition(mm));
-
-    wait(200, msec);
-  }
+  
+  
+    
   FILE *fp = fopen("/dev/serial1", "r");
   if(!fp) {
     Brain.Screen.print("Failed to open /dev/serial1");

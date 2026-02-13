@@ -285,6 +285,25 @@ void RedLG_Shoot(int shooter_time) {
   RMove.stop(brake);
 }
 
+void blueLG_Shoot(int shoot_time){
+  colorSensor.setLight(ledState::on);
+  int shooter_time_now = 0;
+  GPS_TurnToHeading(90);
+  GPS_XMove(630);
+  GPS_TurnToHeading(180);
+  GPS_YMove(-1200);
+  GPS_TurnToHeading(90);
+
+  // drive into goal
+  
+  LMove.spin(fwd, -10, pct);
+  RMove.spin(fwd, -10, pct);
+  wait(0.5, sec);
+  Intake.spin(fwd, 100, pct);
+  wait(3, sec); 
+}
+
+
 void RedLeftShoot() {
   GPS_TurnToHeading(90);
   GPS_XMove(-340);

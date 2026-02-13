@@ -357,7 +357,7 @@ void RedDownCenterGoalShoot()
     intakeGroup.stop(coast);
 
 }
-void BlueLeftGoal()
+void BlueLeftShoot()
 {
   /*
     while(true)
@@ -380,7 +380,7 @@ void BlueLeftGoal()
     GPS_XMove(205);//后退到红方区域
     GPS_TurnToHeading(180);//转向红左
     GPS_YMove(-200);//对齐左侧long goal
-    GPS_TurnToHeading(125);//前吸后打机型对准左侧long goal（前吸前打机型应改为90度）
+    GPS_TurnToHeading(305);//前吸后打机型对准左侧long goal（前吸前打机型应改为90度）
     LMove.spin(fwd,-20,pct);
     RMove.spin(fwd,-20,pct);
 
@@ -407,7 +407,7 @@ void BlueLeftGoal()
     
 }
 void RedLeftShoot(){
-    GPS_TurnToHeading(90);//GPS传感器对准红站位
+     GPS_TurnToHeading(90);//GPS传感器对准红站位
     GPS_XMove(-345);//后退到红方区域
     GPS_TurnToHeading(180);//转向红左
     GPS_YMove(420);//对齐左侧long goal
@@ -425,9 +425,6 @@ void RedLeftShoot(){
     //Shooter.spin(fwd,100,pct);
  
     wait(2, seconds);
-    LMove.spin(fwd,-20,pct);
-    RMove.spin(fwd,-20,pct);
-    wait(.5, sec);
     LMove.spin(fwd,10,pct);
     RMove.spin(fwd,10,pct);
     wait(5, sec);//顶住long goal发射
@@ -446,8 +443,6 @@ void auto_isolation(){
 /*---------------------------------------------------------------------------*/
 /*                              主程序流程                                   */
 /*---------------------------------------------------------------------------*/
-
-
 
 int main() {
   colorSensor.setLight(ledState::on);

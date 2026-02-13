@@ -40,28 +40,31 @@ motor RMoveMotorB = motor(PORT13, ratio6_1, true);
 motor_group RMove = motor_group(RMoveMotorA, RMoveMotorB);
 drivetrain Drivetrain = drivetrain(LMove, RMove, 319.024, 284.48, 196.85, mm, 1);
 
+
+
 // 其他电机和传感器配置
 controller Controller1 = controller(primary);
 motor Intake = motor(PORT5, ratio6_1, true);
-motor Shooter = motor(PORT2, ratio6_1, false);
+motor Shooter = motor(PORT2, ratio6_1, true);
 digital_out Loader = digital_out(Brain.ThreeWirePort.H);
 inertial Gyro = inertial(PORT6);
 gps GPS = gps(PORT7, 88.9, -177.8, mm, 180);
 optical colorSensor = optical(PORT1);
+motor_group intakeGroup = motor_group(Intake, Shooter);
 
 // 前吸和后吸电机
 
 
 // 跟踪配置参数
-std::string desired_detection = "blue";
+std::string desired_detection = "red";
 double desired_x = 317;         // 目标x坐标（中心位置）
 double x_tolerance = 50;        // x方向允许误差范围（像素）
 double min_y = 80;             // 最小y坐标（过近阈值）
 double max_y = 400;             // 最大y坐标（过远阈值）
 double forward_speed = 200;     // 前进速度（rpm）
 double turn_speed = 10;         // 转向速度（rpm）
-double Intake_speed = 500;      // 3号电机转速（rpm）
-double DownRoller_speed = 400;      // 5号电机转速（rpm）
+double Intake_speed = 600;      // 3号电机转速（rpm）
+double DownRoller_speed = 600;      // 5号电机转速（rpm）
 bool tracking_complete = false; // 跟踪完成标志
 
 // GPS相关变量
@@ -162,6 +165,7 @@ void handleCommand(const std::string &cmd)
   if (tracking_complete) return; // 跟踪完成后不再处理命令
   
   std::vector<std::string> parts = split(cmd, ',');
+  
   std::string detection_type = parts[0];
   Brain.Screen.clearLine(1);
   Brain.Screen.print("Recv cmd: %s", cmd.c_str());
@@ -170,14 +174,14 @@ void handleCommand(const std::string &cmd)
   if (detection_type == "none") 
   {
     Drivetrain.stop();
-    Intake.stop();
+    intakeGroup.stop();
     return;
   }
 
   // 只处理期望的目标类型
   if(detection_type == desired_detection && parts.size() >= 3) 
   {
-    Intake.spin(forward, Intake_speed, rpm);
+    intakeGroup.spin(forward, Intake_speed, rpm);
     // DownRoller.spin(forward, DownRoller_speed, rpm);
     double current_x = std::atof(parts[1].c_str());
     double current_y = std::atof(parts[2].c_str());
@@ -223,11 +227,11 @@ void handleCommand(const std::string &cmd)
     {
       // y值过大（目标非常接近），减速向前直行1.5秒，然后立即停止并结束跟踪阶段
       Drivetrain.drive(forward, forward_speed/2.0, rpm);
-
+      
       //Blocks any updates in the thread for 1.5 seconds.
-      wait(1500, msec);
+      wait(750, msec);
       Drivetrain.stop();
-      Intake.stop();
+      intakeGroup.stop();
       // DownRoller.stop();
       tracking_complete = true; // 结束跟踪阶段，退出主循环
       Brain.Screen.clearLine(3);
@@ -244,7 +248,7 @@ void handleCommand(const std::string &cmd)
   else
   {
     // 非目标类型，停止不动
-    Intake.stop();
+    intakeGroup.stop();
     Drivetrain.stop();
   }
 }
@@ -333,6 +337,24 @@ void GPS_YMove(int Ydis)//GPS以场地Y轴运动(度数0/180),变量为目标Y�
     wait(0.5,msec);//停止移动并等待
 }
 
+
+void RedDownCenterGoalShoot()
+{
+    GPS_XMove(-800);
+    GPS_TurnToHeading(135);
+    GPS_XMove(-390);
+    GPS_TurnToHeading(40);
+ 
+    intakeGroup.spin(fwd,-80,pct);
+    LMove.spin(fwd,100,pct);
+    RMove.spin(fwd,100,pct);
+    wait(300,msec);
+    LMove.stop();
+    RMove.stop();
+    wait(1, sec);
+    intakeGroup.stop(coast);
+
+}
 void RedLeftShoot()
 {
   /*
@@ -353,22 +375,25 @@ void RedLeftShoot()
     */
     
     GPS_TurnToHeading(90);//GPS传感器对准红站位
-    GPS_XMove(-340);//后退到红方区域
+    GPS_XMove(-350);//后退到红方区域
     GPS_TurnToHeading(180);//转向红左
     GPS_YMove(420);//对齐左侧long goal
-    GPS_TurnToHeading(316);//前吸后打机型对准左侧long goal（前吸前打机型应改为90度）
+    GPS_TurnToHeading(315);//前吸后打机型对准左侧long goal（前吸前打机型应改为90度）
 
-    LMove.spin(fwd,-25,pct);
-    RMove.spin(fwd,-25,pct);
+    LMove.spin(fwd,-37,pct);
+    RMove.spin(fwd,-37,pct);
     wait(1,sec);//顶框，需要机器具备long goal限位结构
-    Intake.spin(fwd,100,pct);
+    LMove.stop(brake);
+    RMove.stop(brake);
+    intakeGroup.setVelocity(100, percent);
+    intakeGroup.spinFor(2, sec);
     //DownRoller.spin(fwd,100,pct);
     //UpRoller.spin(fwd,100,pct);
     //Shooter.spin(fwd,100,pct);
-    LMove.spin(fwd,-10,pct);
-    RMove.spin(fwd,-10,pct);
+    LMove.spin(fwd,10,pct);
+    RMove.spin(fwd,10,pct);
     wait(5, sec);//顶住long goal发射
-    Intake.stop(coast);
+    intakeGroup.stop(coast);
     //DownRoller.stop(coast);
     //UpRoller.stop(coast);
     //Shooter.stop(coast);
@@ -423,20 +448,20 @@ int main() {
 
 
   // REMOVE 427-443 if Problematic
-  //Starts intake and only stops when color sensor sees blue (hopefully any red is spit out.)
+  //Starts intakeGroup and only stops when color sensor sees blue (hopefully any red is spit out.)
   colorSensor.setLightPower(100);   // 0–100 percent
   colorSensor.setLight(ledState::on);
   while(true)
   { 
-    
-    if(colorSensor.hue() >= 190 && colorSensor.hue() <= 230)
+    //red
+    if(colorSensor.hue() >= 0 && colorSensor.hue() <= 30)
     {
-      Intake.stop();
+      intakeGroup.stop();
       break;
     }
     else
     {
-      Intake.spin(fwd,15,pct);
+      intakeGroup.spin(fwd,15,pct);
     }
     wait(20,msec);
   }
@@ -444,7 +469,7 @@ int main() {
 
   Brain.Screen.clearLine(4);
   Brain.Screen.print("Starting GPS program...");
-  RedLeftShoot();
+  RedDownCenterGoalShoot();
 
   // 主循环保持程序运行
   while (true) {

@@ -267,6 +267,7 @@ void pre_autonomous(void) {
   
 }
 
+
 void GPS_TurnToHeading(float Heading)//GPS转向函数,变量为目标方向
 {
   heading_deg = Heading;
@@ -320,13 +321,14 @@ void GPS_XMove(int Xdis)//GPS以场地X轴运动(度数90/270),变量为目标X�
 void GPS_YMove(int Ydis)//GPS以场地Y轴运动(度数0/180),变量为目标Y距离
 {
   Ymove_distance = Ydis;
+  double current = GPS.yPosition(mm);
   do{
-      if(GPS.yPosition(mm)  < Ymove_distance - 100)
+      if(current < Ymove_distance - 100)
       {
         LMove.spin(fwd,-20,pct);
         RMove.spin(fwd,-20,pct);
       }
-      else if(GPS.yPosition(mm)  > Ymove_distance + 100)
+      else if(current > Ymove_distance + 100)
       {
         LMove.spin(fwd,20,pct);
         RMove.spin(fwd,20,pct);
@@ -355,7 +357,7 @@ void RedDownCenterGoalShoot()
     intakeGroup.stop(coast);
 
 }
-void RedLeftShoot()
+void BlueLeftGoal()
 {
   /*
     while(true)
@@ -375,21 +377,23 @@ void RedLeftShoot()
     */
     
     GPS_TurnToHeading(90);//GPS传感器对准红站位
-    GPS_XMove(-350);//后退到红方区域
+    GPS_XMove(205);//后退到红方区域
     GPS_TurnToHeading(180);//转向红左
-    GPS_YMove(420);//对齐左侧long goal
-    GPS_TurnToHeading(315);//前吸后打机型对准左侧long goal（前吸前打机型应改为90度）
+    GPS_YMove(-200);//对齐左侧long goal
+    GPS_TurnToHeading(125);//前吸后打机型对准左侧long goal（前吸前打机型应改为90度）
+    LMove.spin(fwd,-20,pct);
+    RMove.spin(fwd,-20,pct);
 
-    LMove.spin(fwd,-37,pct);
-    RMove.spin(fwd,-37,pct);
-    wait(1,sec);//顶框，需要机器具备long goal限位结构
+    wait(2,sec);//顶框，需要机器具备long goal限位结构
     LMove.stop(brake);
     RMove.stop(brake);
-    intakeGroup.setVelocity(100, percent);
+    intakeGroup.setVelocity(90, percent);
     intakeGroup.spinFor(2, sec);
     //DownRoller.spin(fwd,100,pct);
     //UpRoller.spin(fwd,100,pct);
     //Shooter.spin(fwd,100,pct);
+ 
+    wait(2, seconds);
     LMove.spin(fwd,10,pct);
     RMove.spin(fwd,10,pct);
     wait(5, sec);//顶住long goal发射
@@ -402,15 +406,54 @@ void RedLeftShoot()
     
     
 }
+void RedLeftShoot(){
+    GPS_TurnToHeading(90);//GPS传感器对准红站位
+    GPS_XMove(-345);//后退到红方区域
+    GPS_TurnToHeading(180);//转向红左
+    GPS_YMove(420);//对齐左侧long goal
+    GPS_TurnToHeading(305);//前吸后打机型对准左侧long goal（前吸前打机型应改为90度）
+    LMove.spin(fwd,-20,pct);
+    RMove.spin(fwd,-20,pct);
 
+    wait(2,sec);//顶框，需要机器具备long goal限位结构
+    LMove.stop(brake);
+    RMove.stop(brake);
+    intakeGroup.setVelocity(90, percent);
+    intakeGroup.spinFor(2, sec);
+    //DownRoller.spin(fwd,100,pct);
+    //UpRoller.spin(fwd,100,pct);
+    //Shooter.spin(fwd,100,pct);
+ 
+    wait(2, seconds);
+    LMove.spin(fwd,-20,pct);
+    RMove.spin(fwd,-20,pct);
+    wait(.5, sec);
+    LMove.spin(fwd,10,pct);
+    RMove.spin(fwd,10,pct);
+    wait(5, sec);//顶住long goal发射
+    intakeGroup.stop(coast);
+    //DownRoller.stop(coast);
+    //UpRoller.stop(coast);
+    //Shooter.stop(coast);
+    LMove.stop(brake);
+    RMove.stop(brake);
+    
+    
+}
+void auto_isolation(){
+    RedLeftShoot();
+}
 /*---------------------------------------------------------------------------*/
 /*                              主程序流程                                   */
 /*---------------------------------------------------------------------------*/
 
+
+
 int main() {
+  colorSensor.setLight(ledState::on);
   pre_autonomous(); 
   
-  
+  auto_isolation();
     
   FILE *fp = fopen("/dev/serial1", "r");
   if(!fp) {
@@ -446,12 +489,12 @@ int main() {
 
   // 第二阶段：执行GPS定位程序
 
-
+  size_t time = 0;
   // REMOVE 427-443 if Problematic
   //Starts intakeGroup and only stops when color sensor sees blue (hopefully any red is spit out.)
   colorSensor.setLightPower(100);   // 0–100 percent
   colorSensor.setLight(ledState::on);
-  while(true)
+  while(time < 20)
   { 
     //red
     if(colorSensor.hue() >= 0 && colorSensor.hue() <= 30)
@@ -464,12 +507,12 @@ int main() {
       intakeGroup.spin(fwd,15,pct);
     }
     wait(20,msec);
+    time++;
   }
-  colorSensor.setLight(ledState::off);
+  RedLeftShoot();
 
   Brain.Screen.clearLine(4);
   Brain.Screen.print("Starting GPS program...");
-  RedDownCenterGoalShoot();
 
   // 主循环保持程序运行
   while (true) {

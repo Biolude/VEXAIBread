@@ -346,9 +346,9 @@ void RedDownCenterGoalShoot()
     GPS_TurnToHeading(40);
  
     intakeGroup.spin(fwd,-80,pct);
-    LMove.spin(fwd,100,pct);
-    RMove.spin(fwd,100,pct);
-    wait(300,msec);
+    LMove.spin(fwd,40,pct);
+    RMove.spin(fwd,40,pct);
+    wait(1500,msec);
     LMove.stop();
     RMove.stop();
     wait(1, sec);

@@ -26,6 +26,8 @@ using namespace vex;
 using signature = vision::signature;
 using code = vision::code;
 
+bool first = true;
+
 // A global instance of competition
 competition Competition;
 brain  Brain;
@@ -274,13 +276,13 @@ void GPS_TurnToHeading(float Heading)//GPS转向函数,变量为目标方向
   do{
       if(GPS.heading(deg) < heading_deg - 30)
       {
-        LMove.spin(fwd,15,pct);
-        RMove.spin(fwd,-15,pct);
+        LMove.spin(fwd,20,pct);
+        RMove.spin(fwd,-20,pct);
       }
       else if(GPS.heading(deg) > heading_deg + 30)
       {
-        LMove.spin(fwd,-15,pct);
-        RMove.spin(fwd,15,pct);
+        LMove.spin(fwd,-20,pct);
+        RMove.spin(fwd,20,pct);
       }
       if(GPS.heading(deg) < heading_deg - 12 and GPS.heading(deg) > heading_deg - 30)
       {
@@ -304,13 +306,13 @@ void GPS_XMove(int Xdis)//GPS以场地X轴运动(度数90/270),变量为目标X�
   do{
       if(GPS.xPosition(mm)  < Xmove_distance - 100)
       {
-        LMove.spin(fwd,20,pct);
-        RMove.spin(fwd,20,pct);
+        LMove.spin(fwd,60,pct);
+        RMove.spin(fwd,60,pct);
       }
       else if(GPS.xPosition(mm)  > Xmove_distance + 100)
       {
-        LMove.spin(fwd,-20,pct);
-        RMove.spin(fwd,-20,pct);
+        LMove.spin(fwd,-60,pct);
+        RMove.spin(fwd,-60,pct);
       }
     }while(GPS.xPosition(mm)  > Xmove_distance + 100 or GPS.xPosition(mm) < Xmove_distance - 100);//判断是否到达目标X位置，目标X位置范围可根据需要调整
     LMove.stop(hold);
@@ -321,17 +323,16 @@ void GPS_XMove(int Xdis)//GPS以场地X轴运动(度数90/270),变量为目标X�
 void GPS_YMove(int Ydis)//GPS以场地Y轴运动(度数0/180),变量为目标Y距离
 {
   Ymove_distance = Ydis;
-  double current = GPS.yPosition(mm);
   do{
-      if(current < Ymove_distance - 100)
+      if(GPS.yPosition(mm) < Ymove_distance - 100)
       {
-        LMove.spin(fwd,-20,pct);
-        RMove.spin(fwd,-20,pct);
+        LMove.spin(fwd,-60,pct);
+        RMove.spin(fwd,-60,pct);
       }
-      else if(current > Ymove_distance + 100)
+      else if(GPS.yPosition(mm) > Ymove_distance + 100)
       {
-        LMove.spin(fwd,20,pct);
-        RMove.spin(fwd,20,pct);
+        LMove.spin(fwd,60,pct);
+        RMove.spin(fwd,60,pct);
       }
     }while(GPS.yPosition(mm)  > Ymove_distance + 100 or GPS.yPosition(mm) < Ymove_distance - 100);//判断是否到达目标X位置，目标X位置范围可根据需要调整
     LMove.stop(hold);
@@ -358,33 +359,26 @@ void RedDownCenterGoalShoot()
 
 }
 void BlueLeftShoot()
-{
-  /*
-    while(true)
-  {
-    Brain.Screen.clearScreen();
-    Brain.Screen.setCursor(1,1);
-    Brain.Screen.print("Heading: %.2f", GPS.heading(deg));
-    Brain.Screen.setCursor(2,1);
-    Brain.Screen.print("Rotation: %.2f", GPS.rotation(deg));
-    Brain.Screen.setCursor(3,1);
-    Brain.Screen.print("X: %.2f mm", GPS.xPosition(mm));
-    Brain.Screen.setCursor(4,1);
-    Brain.Screen.print("Y: %.2f mm", GPS.yPosition(mm));
-
-    wait(1, sec);
-  }
-    */
-    
-    GPS_TurnToHeading(90);//GPS传感器对准红站位
-    GPS_XMove(205);//后退到红方区域
-    GPS_TurnToHeading(180);//转向红左
-    GPS_YMove(-200);//对齐左侧long goal
-    GPS_TurnToHeading(305);//前吸后打机型对准左侧long goal（前吸前打机型应改为90度）
+{    
+   
+    GPS_TurnToHeading(90);//转向红左
+    GPS_XMove(345);//后退到红方区域
+    GPS_TurnToHeading(180);//GPS传感器对准红站位
+    GPS_YMove(-420);//对齐左侧long goal
+    GPS_TurnToHeading(125);//前吸后打机型对准左侧long goal（前吸前打机型应改为90度）
     LMove.spin(fwd,-20,pct);
     RMove.spin(fwd,-20,pct);
 
-    wait(2,sec);//顶框，需要机器具备long goal限位结构
+    wait(1.5,sec);//顶框，需要机器具备long goal限位结构
+    
+    LMove.stop(brake);
+    RMove.stop(brake);
+    LMove.spin(fwd,10,pct);
+    RMove.spin(fwd,10,pct);
+    wait(.2, seconds);
+    LMove.spin(fwd,-50,pct);
+    RMove.spin(fwd,-50,pct);
+    wait(1, seconds);
     LMove.stop(brake);
     RMove.stop(brake);
     intakeGroup.setVelocity(90, percent);
@@ -393,29 +387,36 @@ void BlueLeftShoot()
     //UpRoller.spin(fwd,100,pct);
     //Shooter.spin(fwd,100,pct);
  
-    wait(2, seconds);
-    LMove.spin(fwd,10,pct);
-    RMove.spin(fwd,10,pct);
-    wait(5, sec);//顶住long goal发射
+    wait(1.5, seconds);
+    LMove.spin(fwd,80,pct);
+    RMove.spin(fwd,80,pct);
+    wait(.4, sec);//顶住long goal发射
     intakeGroup.stop(coast);
     //DownRoller.stop(coast);
     //UpRoller.stop(coast);
     //Shooter.stop(coast);
-    LMove.stop(brake);
-    RMove.stop(brake);
+    LMove.stop(coast);
+    RMove.stop(coast);
+    
     
     
 }
 void RedLeftShoot(){
-     GPS_TurnToHeading(90);//GPS传感器对准红站位
-    GPS_XMove(-345);//后退到红方区域
+    GPS_TurnToHeading(90);//GPS传感器对准红站位
+    GPS_XMove(-335);//后退到红方区域
     GPS_TurnToHeading(180);//转向红左
     GPS_YMove(420);//对齐左侧long goal
     GPS_TurnToHeading(305);//前吸后打机型对准左侧long goal（前吸前打机型应改为90度）
-    LMove.spin(fwd,-20,pct);
-    RMove.spin(fwd,-20,pct);
+    LMove.spin(fwd,-40,pct);
+    RMove.spin(fwd,-40,pct);
 
-    wait(2,sec);//顶框，需要机器具备long goal限位结构
+    wait(1.5,sec);//顶框，需要机器具备long goal限位结构
+    
+    LMove.stop(brake);
+    RMove.stop(brake);
+    LMove.spin(fwd,-50,pct);
+    RMove.spin(fwd,-50,pct);
+    wait(1, seconds);
     LMove.stop(brake);
     RMove.stop(brake);
     intakeGroup.setVelocity(90, percent);
@@ -424,16 +425,16 @@ void RedLeftShoot(){
     //UpRoller.spin(fwd,100,pct);
     //Shooter.spin(fwd,100,pct);
  
-    wait(2, seconds);
-    LMove.spin(fwd,10,pct);
-    RMove.spin(fwd,10,pct);
-    wait(5, sec);//顶住long goal发射
+    wait(1.5, seconds);
+    LMove.spin(fwd,100,pct);
+    RMove.spin(fwd,100,pct);
+    wait(0.6, sec);//顶住long goal发射
     intakeGroup.stop(coast);
     //DownRoller.stop(coast);
     //UpRoller.stop(coast);
     //Shooter.stop(coast);
-    LMove.stop(brake);
-    RMove.stop(brake);
+    LMove.stop(coast);
+    RMove.stop(coast);
     
     
 }
@@ -470,7 +471,6 @@ void get_block(){
   // 原地等待2秒
   Brain.Screen.clearLine(4);
   Brain.Screen.print("Waiting 2 seconds...");
-  wait(2, sec);
 
   // 第二阶段：执行GPS定位程序
 
@@ -494,18 +494,49 @@ void get_block(){
     wait(20,msec);
     time++;
   }
-  RedLeftShoot(); // CHANGE!!!
+  if(desired_detection == "red") RedLeftShoot(); // CHANGE!!!
+  else BlueLeftShoot();
 
 }
 void auto_isolation(){
-    RedLeftShoot(); // CHANGE!!!
-    GPS_TurnToHeading(225);
+  if(first == true){
+  if(desired_detection == "red") RedLeftShoot(); // CHANGE!!!
+  else BlueLeftShoot();
+  
+  GPS_TurnToHeading(250);
+   get_block();
+
+    for(int i{0}; i<3; i++){
     get_block();
+    if(desired_detection == "red") RedLeftShoot(); // CHANGE!!!
+    else BlueLeftShoot();    }
+  }
+
+  else{
+
+    get_block();
+    BlueLeftShoot();
+    for(int i{0}; i<5; i++){
+    get_block();
+  if(desired_detection == "red") RedLeftShoot(); // CHANGE!!!
+  else BlueLeftShoot();    }
+
+  }
+
+  
 }
 void auto_interaction(){
+  
+  if(desired_detection == "red") RedLeftShoot(); // CHANGE!!!
+  else BlueLeftShoot();    GPS_TurnToHeading(225);
+    get_block();
+  RedDownCenterGoalShoot();
   for(int i{0}; i<5; i++){
     get_block();
-  }
+  if(desired_detection == "red") RedLeftShoot(); // CHANGE!!!
+  else BlueLeftShoot();  }
+  
+  
 }
 /*---------------------------------------------------------------------------*/
 /*                              主程序流程                                   */

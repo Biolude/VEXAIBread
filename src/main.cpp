@@ -56,7 +56,7 @@ motor_group intakeGroup = motor_group(Intake, Shooter);
 
 
 // 跟踪配置参数
-std::string desired_detection = "red";
+std::string desired_detection = "red"; // CHANGE!!!
 double desired_x = 317;         // 目标x坐标（中心位置）
 double x_tolerance = 50;        // x方向允许误差范围（像素）
 double min_y = 80;             // 最小y坐标（过近阈值）
@@ -229,7 +229,7 @@ void handleCommand(const std::string &cmd)
       Drivetrain.drive(forward, forward_speed/2.0, rpm);
       
       //Blocks any updates in the thread for 1.5 seconds.
-      wait(750, msec);
+      wait(1000, msec);
       Drivetrain.stop();
       intakeGroup.stop();
       // DownRoller.stop();
@@ -240,7 +240,7 @@ void handleCommand(const std::string &cmd)
     else 
     {
       // 目标过远，先快速靠近
-      Drivetrain.drive(forward, forward_speed * 1.5, rpm);
+      Drivetrain.drive(forward, forward_speed * 3, rpm);
       Brain.Screen.clearLine(3);
       Brain.Screen.print("Moving closer...");
     }
@@ -437,23 +437,13 @@ void RedLeftShoot(){
     
     
 }
-void auto_isolation(){
-    RedLeftShoot();
-}
-/*---------------------------------------------------------------------------*/
-/*                              主程序流程                                   */
-/*---------------------------------------------------------------------------*/
 
-int main() {
-  colorSensor.setLight(ledState::on);
-  pre_autonomous(); 
-  
-  auto_isolation();
-    
+void get_block(){
+     
   FILE *fp = fopen("/dev/serial1", "r");
   if(!fp) {
     Brain.Screen.print("Failed to open /dev/serial1");
-    return 1;
+    return;
   }
   Brain.Screen.print("Starting blue tracking...");
 
@@ -504,10 +494,34 @@ int main() {
     wait(20,msec);
     time++;
   }
-  RedLeftShoot();
+  RedLeftShoot(); // CHANGE!!!
 
+}
+void auto_isolation(){
+    RedLeftShoot(); // CHANGE!!!
+    GPS_TurnToHeading(225);
+    get_block();
+}
+void auto_interaction(){
+  for(int i{0}; i<5; i++){
+    get_block();
+  }
+}
+/*---------------------------------------------------------------------------*/
+/*                              主程序流程                                   */
+/*---------------------------------------------------------------------------*/
+
+int main() {
+  colorSensor.setLight(ledState::on);
+  pre_autonomous(); 
+  
+ 
   Brain.Screen.clearLine(4);
   Brain.Screen.print("Starting GPS program...");
+
+  Competition.autonomous(auto_isolation);
+  Competition.drivercontrol(auto_interaction);
+
 
   // 主循环保持程序运行
   while (true) {
